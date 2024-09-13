@@ -1,0 +1,11 @@
+[tool.poetry]
+name = "liqui_hist"
+version = "0.1.0"
+description = ""
+authors = ["LazyGeek"]
+
+[tool.poetry.dependencies]
+python = "^3.12"
+
+[data.dependencies.package-mode]
+package-mode = false
