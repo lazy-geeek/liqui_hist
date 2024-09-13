@@ -5,13 +5,11 @@ from datetime import datetime
 import pytz
 from websockets import connect
 from termcolor import cprint
-from decouple import config
+
 
 websocket_url = "wss://fstream.binance.com/ws/!forceOrder@arr"
 filename = "binance_liqs.csv"
 est = pytz.timezone("Europe/Berlin")
-
-usd_liqd_size = float(config("USD_LIQD_SIZE"))
 
 if not os.path.isfile(filename):
     with open(filename, "w") as f:
@@ -51,7 +49,7 @@ async def binance_liquidation(uri, filename):
                 time_est = datetime.fromtimestamp(timestamp / 1000, est).strftime(
                     "%H:%M:%S"
                 )
-                if usd_size > usd_liqd_size:
+                if usd_size > 1000:
                     liquidation_type = "L LIQ" if side == "SELL" else "S LIQ"
                     symbol = symbol[:4]
                     output = f"{liquidation_type} {symbol} {time_est} {usd_size:,.0f}"

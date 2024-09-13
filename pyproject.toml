@@ -6,6 +6,10 @@ authors = ["LazyGeek"]
 
 [tool.poetry.dependencies]
 python = "^3.12"
+pytz = "^2024.2"
+websockets = "^13.0.1"
+termcolor = "^2.4.0"
+requests = "^2.31.0"
 
 [data.dependencies.package-mode]
 package-mode = false
