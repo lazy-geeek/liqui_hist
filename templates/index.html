@@ -1,0 +1,25 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Binance Liquidation Tracker</title>
+</head>
+<body>
+    <h1>Binance Liquidation Tracker</h1>
+    <div id="liquidation-log"></div>
+    <script>
+        const logElement = document.getElementById("liquidation-log");
+
+        // Function to add a new liquidation entry to the log
+        function addLiquidationEntry(data) {
+            const entry = document.createElement("div");
+            entry.textContent = data;
+            logElement.appendChild(entry);
+        }
+
+        // Placeholder for fetching data from the backend and updating the log
+        // ...
+    </script>
+</body>
+</html>

@@ -1,4 +1,6 @@
+from flask import Flask, render_template
 import asyncio
+import threading
 import json
 import os
 from datetime import datetime
@@ -7,11 +9,10 @@ from websockets import connect
 from termcolor import cprint
 import mysql.connector
 
-# TODO Add html status page for checking the status and running
+app = Flask(__name__)
 
-
-websocket_url = "wss://fstream.binance.com/ws/!forceOrder@arr"
-est = pytz.timezone("Europe/Berlin")
+# Global variables to store the output
+output_data = []
 
 # MySQL database configuration from environment variables
 db_config = {
@@ -80,9 +81,9 @@ async def binance_liquidation(uri):
                 filled_quantity = float(order_data["z"])
                 price = float(order_data["p"])
                 usd_size = filled_quantity * price
-                time_est = datetime.fromtimestamp(timestamp / 1000, est).strftime(
-                    "%H:%M:%S"
-                )
+                time_est = datetime.fromtimestamp(
+                    timestamp / 1000, pytz.timezone("Europe/Berlin")
+                ).strftime("%H:%M:%S")
                 if usd_size > 0:
                     liquidation_type = "L LIQ" if side == "SELL" else "S LIQ"
                     symbol = symbol[:4]
@@ -95,31 +96,39 @@ async def binance_liquidation(uri):
                         attrs.append("blink")
                         output = f"{stars}{output}"
                         for _ in range(4):
-                            cprint(output, "white", f"on_{color}", attrs=attrs)
+                            output_data.append(output)
                     elif usd_size > 100000:
                         stars = "*" * 1
                         attrs.append("blink")
                         output = f"{stars}{output}"
                         for _ in range(2):
-                            cprint(output, "white", f"on_{color}", attrs=attrs)
-
+                            output_data.append(output)
                     elif usd_size > 25000:
-                        cprint(output, "white", f"on_{color}", attrs=attrs)
-
+                        output_data.append(output)
                     else:
-                        cprint(output, "white", f"on_{color}")
+                        output_data.append(output)
 
-                    print("")
+                    msg_values = [
+                        order_data.get(key)
+                        for key in [
+                            "s",
+                            "S",
+                            "o",
+                            "f",
+                            "q",
+                            "p",
+                            "ap",
+                            "X",
+                            "l",
+                            "z",
+                            "T",
+                        ]
+                    ]
+                    msg_values.append(usd_size)
 
-                msg_values = [
-                    order_data.get(key)
-                    for key in ["s", "S", "o", "f", "q", "p", "ap", "X", "l", "z", "T"]
-                ]
-                msg_values.append(usd_size)
-
-                # Use the existing MySQL database connection
-                insert_data(global_cursor, msg_values)
-                global_conn.commit()  # Commit the transaction after each insert
+                    # Use the existing MySQL database connection
+                    insert_data(global_cursor, msg_values)
+                    global_conn.commit()  # Commit the transaction after each insert
 
             except Exception as e:
                 await asyncio.sleep(5)
@@ -135,3 +144,25 @@ def get_db_connection():
     return global_conn, global_cursor
 
 
+@app.route("/")
+def index():
+    return render_template("index.html", output_data=output_data)
+
+
+def run_flask():
+    app.run(host="0.0.0.0", port=5000)
+
+
+def run_binance_liquidation():
+    asyncio.run(binance_liquidation("wss://fstream.binance.com/ws/!forceOrder@arr"))
+
+
+if __name__ == "__main__":
+    flask_thread = threading.Thread(target=run_flask)
+    binance_thread = threading.Thread(target=run_binance_liquidation)
+
+    flask_thread.start()
+    binance_thread.start()
+
+    flask_thread.join()
+    binance_thread.join()

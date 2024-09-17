@@ -12,6 +12,7 @@ termcolor = "^2.4.0"
 requests = "^2.31.0"
 mysql-connector-python = "^8.0.33"
 fastapi = "^0.114.1"
+flask = "^3.0.3"
 
 [data.dependencies.package-mode]
 package-mode = false

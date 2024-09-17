@@ -1,3 +1,4 @@
+from flask import Flask, render_template
 import asyncio
 import json
 import os
@@ -87,29 +88,29 @@ async def binance_liquidation(uri):
                     liquidation_type = "L LIQ" if side == "SELL" else "S LIQ"
                     symbol = symbol[:4]
                     output = f"{liquidation_type} {symbol} {time_est} {usd_size:,.0f}"
-                    color = "green" if side == "SELL" else "red"
-                    attrs = ["bold"] if usd_size > 10000 else []
+                    # color = "green" if side == "SELL" else "red"
+                    # attrs = ["bold"] if usd_size > 10000 else []
 
-                    if usd_size > 250000:
-                        stars = "*" * 3
-                        attrs.append("blink")
-                        output = f"{stars}{output}"
-                        for _ in range(4):
-                            cprint(output, "white", f"on_{color}", attrs=attrs)
-                    elif usd_size > 100000:
-                        stars = "*" * 1
-                        attrs.append("blink")
-                        output = f"{stars}{output}"
-                        for _ in range(2):
-                            cprint(output, "white", f"on_{color}", attrs=attrs)
+                    # if usd_size > 250000:
+                    #    stars = "*" * 3
+                    #    attrs.append("blink")
+                    #    output = f"{stars}{output}"
+                    #    for _ in range(4):
+                    #        cprint(output, "white", f"on_{color}", attrs=attrs)
+                    # elif usd_size > 100000:
+                    #    stars = "*" * 1
+                    #    attrs.append("blink")
+                    #    output = f"{stars}{output}"
+                    #    for _ in range(2):
+                    #        cprint(output, "white", f"on_{color}", attrs=attrs)
 
-                    elif usd_size > 25000:
-                        cprint(output, "white", f"on_{color}", attrs=attrs)
+                    # elif usd_size > 25000:
+                    #    cprint(output, "white", f"on_{color}", attrs=attrs)
 
-                    else:
-                        cprint(output, "white", f"on_{color}")
+                    # else:
+                    #    cprint(output, "white", f"on_{color}")
 
-                    print("")
+                    # print("")
 
                 msg_values = [
                     order_data.get(key)
@@ -135,3 +136,19 @@ def get_db_connection():
     return global_conn, global_cursor
 
 
+app = Flask(__name__)
+
+
+@app.route("/")
+def index():
+    return render_template("index.html")
+
+
+async def main():
+    loop = asyncio.get_event_loop()
+    loop.create_task(binance_liquidation(websocket_url))
+    app.run(debug=True, threaded=True)
+
+
+if __name__ == "__main__":
+    asyncio.run(main())
