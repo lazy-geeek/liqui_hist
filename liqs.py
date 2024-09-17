@@ -6,7 +6,8 @@ import pytz
 from websockets import connect
 from termcolor import cprint
 import mysql.connector
-from db_utils import test_db_connection
+
+# TODO Add html status page for checking the status and running
 
 
 websocket_url = "wss://fstream.binance.com/ws/!forceOrder@arr"
@@ -82,7 +83,7 @@ async def binance_liquidation(uri):
                 time_est = datetime.fromtimestamp(timestamp / 1000, est).strftime(
                     "%H:%M:%S"
                 )
-                if usd_size > 1000:
+                if usd_size > 0:
                     liquidation_type = "L LIQ" if side == "SELL" else "S LIQ"
                     symbol = symbol[:4]
                     output = f"{liquidation_type} {symbol} {time_est} {usd_size:,.0f}"
