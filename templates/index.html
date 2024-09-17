@@ -18,8 +18,20 @@
             logElement.appendChild(entry);
         }
 
-        // Placeholder for fetching data from the backend and updating the log
-        // ...
+        // Function to fetch and update the liquidation log
+        async function updateLiquidationLog() {
+            try {
+                const response = await fetch('/liquidations');
+                const data = await response.json();
+                logElement.innerHTML = ''; // Clear the log
+                data.forEach(entry => addLiquidationEntry(entry));
+            } catch (error) {
+                console.error('Error fetching liquidation data:', error);
+            }
+        }
+
+        // Update the log every 5 seconds
+        setInterval(updateLiquidationLog, 5000);
     </script>
 </body>
 </html>

@@ -1,4 +1,4 @@
-from flask import Flask, render_template
+from flask import Flask, render_template, jsonify
 import asyncio
 import threading
 import json
@@ -146,7 +146,11 @@ def get_db_connection():
 
 @app.route("/")
 def index():
-    return render_template("index.html", output_data=output_data)
+    return render_template("index.html")
+
+@app.route("/liquidations")
+def liquidations():
+    return jsonify(output_data)
 
 
 def run_flask():
