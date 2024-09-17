@@ -13,6 +13,7 @@ requests = "^2.31.0"
 mysql-connector-python = "^8.0.33"
 fastapi = "^0.114.1"
 flask = "^3.0.3"
+flask-socketio = "^5.3.7"
 
 [data.dependencies.package-mode]
 package-mode = false

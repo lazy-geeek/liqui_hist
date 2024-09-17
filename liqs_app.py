@@ -1,4 +1,5 @@
 from flask import Flask, render_template, jsonify
+from flask_socketio import SocketIO, emit
 import asyncio
 import threading
 import json
@@ -10,6 +11,7 @@ from termcolor import cprint
 import mysql.connector
 
 app = Flask(__name__)
+socketio = SocketIO(app)
 
 # Global variables to store the output
 output_data = []
@@ -130,6 +132,9 @@ async def binance_liquidation(uri):
                     insert_data(global_cursor, msg_values)
                     global_conn.commit()  # Commit the transaction after each insert
 
+                    # Emit the new liquidation data to all clients
+                    socketio.emit('new_liquidation', output)
+
             except Exception as e:
                 await asyncio.sleep(5)
 
@@ -154,7 +159,7 @@ def liquidations():
 
 
 def run_flask():
-    app.run(host="0.0.0.0", port=5000)
+    socketio.run(app, host="0.0.0.0", port=5000)
 
 
 def run_binance_liquidation():
