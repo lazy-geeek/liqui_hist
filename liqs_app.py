@@ -128,9 +128,8 @@ async def binance_liquidation(uri):
                     ]
                     msg_values.append(usd_size)
 
-                    # Use the existing MySQL database connection
-                    insert_data(global_cursor, msg_values)
-                    global_conn.commit()  # Commit the transaction after each insert
+                    # Add the data to the buffer
+                    buffer.append(msg_values)
 
                     # Emit the new liquidation data to all clients
                     socketio.emit('new_liquidation', output)
@@ -162,8 +161,37 @@ def run_flask():
     socketio.run(app, host="0.0.0.0", port=5000)
 
 
+buffer = []
+
+def write_buffer_to_db():
+    global buffer
+    if buffer:
+        global_conn, global_cursor = get_db_connection()
+        for data in buffer:
+            insert_data(global_cursor, data)
+        global_conn.commit()
+        buffer = []
+
 def run_binance_liquidation():
     asyncio.run(binance_liquidation("wss://fstream.binance.com/ws/!forceOrder@arr"))
+
+def periodic_write_to_db():
+    while True:
+        time.sleep(60)
+        write_buffer_to_db()
+
+if __name__ == "__main__":
+    flask_thread = threading.Thread(target=run_flask)
+    binance_thread = threading.Thread(target=run_binance_liquidation)
+    db_write_thread = threading.Thread(target=periodic_write_to_db)
+
+    flask_thread.start()
+    binance_thread.start()
+    db_write_thread.start()
+
+    flask_thread.join()
+    binance_thread.join()
+    db_write_thread.join()
 
 
 if __name__ == "__main__":
