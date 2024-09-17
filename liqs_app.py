@@ -195,12 +195,3 @@ if __name__ == "__main__":
     db_write_thread.join()
 
 
-if __name__ == "__main__":
-    flask_thread = threading.Thread(target=run_flask)
-    binance_thread = threading.Thread(target=run_binance_liquidation)
-
-    flask_thread.start()
-    binance_thread.start()
-
-    flask_thread.join()
-    binance_thread.join()
