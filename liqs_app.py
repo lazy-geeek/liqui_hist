@@ -168,8 +168,8 @@ def get_liquidations():
             symbol = data.get("symbol")
             timeframe = data.get("timeframe")
             try:
-                start_timestamp = int(data.get("start_timestamp"))
-                end_timestamp = int(data.get("end_timestamp"))
+                start_timestamp = int(data.get("start_timestamp")) // 1000
+                end_timestamp = int(data.get("end_timestamp")) // 1000
             except (TypeError, ValueError):
                 return jsonify({"error": "start_timestamp and end_timestamp must be valid integers"}), 400
         except Exception as e:
@@ -177,8 +177,8 @@ def get_liquidations():
     else:
         symbol = request.args.get("symbol")
         timeframe = request.args.get("timeframe")
-        start_timestamp = int(request.args.get("start_timestamp"))
-        end_timestamp = int(request.args.get("end_timestamp"))
+        start_timestamp = int(request.args.get("start_timestamp")) // 1000
+        end_timestamp = int(request.args.get("end_timestamp")) // 1000
 
     timeframe_seconds = convert_timeframe_to_seconds(timeframe)
     if start_timestamp < 0 or end_timestamp < 0:
