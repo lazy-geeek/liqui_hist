@@ -283,12 +283,12 @@ def get_liquidations():
     filtered_results = [
         result
         for result in results
-        if result["start_timestamp"] >= start_timestamp
-        and result["end_timestamp"] <= end_timestamp
+        if result["start_timestamp"] >= start_timestamp * 1000
+        and result["end_timestamp"] <= end_timestamp * 1000
     ]
 
     if not filtered_results:
-        return jsonify({"message": "No filtered results"}), 404
+        return jsonify({"message": "No filtered results within the specified range"}), 404
 
     cursor.close()
     conn.close()
