@@ -269,8 +269,12 @@ def get_liquidations():
                 {
                     "symbol": result[0],
                     "timeframe": timeframe,
-                    "start_timestamp": datetime.fromtimestamp(result[2] / 1000).isoformat(),
-                    "end_timestamp": datetime.fromtimestamp(result[3] / 1000).isoformat(),
+                    "start_timestamp": datetime.fromtimestamp(
+                        result[2] / 1000
+                    ).isoformat(),
+                    "end_timestamp": datetime.fromtimestamp(
+                        result[3] / 1000
+                    ).isoformat(),
                     "cumulated_usd_size": float(result[4]),
                 }
             )
@@ -278,17 +282,6 @@ def get_liquidations():
 
     if not results:
         return jsonify({"message": "No data found for the given parameters"}), 404
-
-    # Ensure the results are within the specified range
-    filtered_results = [
-        result
-        for result in results
-        if int(result["start_timestamp"]) >= start_timestamp * 1000
-        and result["end_timestamp"] <= end_timestamp * 1000
-    ]
-
-    if not filtered_results:
-        return jsonify({"message": "No filtered results within the specified range"}), 404
 
     cursor.close()
     conn.close()
