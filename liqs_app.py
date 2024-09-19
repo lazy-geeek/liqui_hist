@@ -199,7 +199,7 @@ def get_liquidations():
         query = f"""
         SELECT symbol, {timeframe_seconds} AS timeframe, {int(current_start.timestamp())} AS start_timestamp, {int(current_end.timestamp())} AS end_timestamp, SUM(usd_size) AS cumulated_usd_size
         FROM binance_liqs
-        WHERE symbol = %s AND order_trade_time >= %s AND order_trade_time < %s
+        WHERE LOWER(symbol) = %s AND order_trade_time >= %s AND order_trade_time < %s
         GROUP BY symbol, timeframe, start_timestamp, end_timestamp
         """
         cursor.execute(
