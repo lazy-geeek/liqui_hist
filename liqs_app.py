@@ -181,8 +181,13 @@ def get_liquidations():
         end_timestamp = int(request.args.get("end_timestamp"))
 
     timeframe_seconds = convert_timeframe_to_seconds(timeframe)
-    start_time = datetime.fromtimestamp(start_timestamp)
-    end_time = datetime.fromtimestamp(end_timestamp)
+    if start_timestamp < 0 or end_timestamp < 0:
+        return jsonify({"error": "start_timestamp and end_timestamp must be non-negative integers"}), 400
+    try:
+        start_time = datetime.fromtimestamp(start_timestamp)
+        end_time = datetime.fromtimestamp(end_timestamp)
+    except ValueError:
+        return jsonify({"error": "start_timestamp and end_timestamp are out of valid range"}), 400
 
     conn = mysql.connector.connect(**db_config)
     cursor = conn.cursor()
