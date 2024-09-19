@@ -13,6 +13,11 @@ import pytz
 from websockets import connect
 from termcolor import cprint
 import mysql.connector
+import logging
+
+# Set up logging
+logging.basicConfig(level=logging.DEBUG)
+logger = logging.getLogger(__name__)
 
 app = Flask(__name__)
 socketio = SocketIO(app)
@@ -55,6 +60,7 @@ def create_table_if_not_exists(cursor):
         usd_size DECIMAL(30, 8)
     )
     """
+    logger.debug(f"Executing SQL: {create_table_query}")
     cursor.execute(create_table_query)
 
 
@@ -69,6 +75,7 @@ def insert_data(cursor, data):
         %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s
     )
     """
+    logger.debug(f"Executing SQL: {insert_query} with data: {data}")
     cursor.execute(insert_query, data)
 
 
@@ -217,6 +224,7 @@ def get_liquidations():
         WHERE LOWER(symbol) = %s AND order_trade_time >= %s AND order_trade_time < %s
         GROUP BY symbol, timeframe, start_timestamp, end_timestamp
         """
+        logger.debug(f"Executing SQL: {query} with params: {symbol}, {int(current_start.timestamp())}, {int(current_end.timestamp())}")
         cursor.execute(
             query,
             (symbol, int(current_start.timestamp()), int(current_end.timestamp())),
