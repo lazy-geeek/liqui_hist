@@ -168,17 +168,28 @@ def get_liquidations():
             symbol = data.get("symbol").lower()
             timeframe = data.get("timeframe")
             try:
-                start_timestamp = int(data.get("start_timestamp"))
-                end_timestamp = int(data.get("end_timestamp"))
+                start_datetime_str = data.get("start_timestamp")
+                end_datetime_str = data.get("end_timestamp")
+                start_datetime = datetime.strptime(start_datetime_str, "%Y-%m-%d %H:%M")
+                end_datetime = datetime.strptime(end_datetime_str, "%Y-%m-%d %H:%M")
+                start_timestamp = int(start_datetime.timestamp())
+                end_timestamp = int(end_datetime.timestamp())
             except (TypeError, ValueError):
-                return jsonify({"error": "start_timestamp and end_timestamp must be valid integers"}), 400
+                return jsonify({"error": "start_timestamp and end_timestamp must be valid datetime strings in the format 'YYYY-MM-DD hh:mm'"}), 400
         except Exception as e:
             return jsonify({"error": "Invalid JSON request body"}), 400
     else:
         symbol = request.args.get("symbol").lower()
         timeframe = request.args.get("timeframe")
-        start_timestamp = int(request.args.get("start_timestamp"))
-        end_timestamp = int(request.args.get("end_timestamp"))
+        try:
+            start_datetime_str = request.args.get("start_timestamp")
+            end_datetime_str = request.args.get("end_timestamp")
+            start_datetime = datetime.strptime(start_datetime_str, "%Y-%m-%d %H:%M")
+            end_datetime = datetime.strptime(end_datetime_str, "%Y-%m-%d %H:%M")
+            start_timestamp = int(start_datetime.timestamp())
+            end_timestamp = int(end_datetime.timestamp())
+        except (TypeError, ValueError):
+            return jsonify({"error": "start_timestamp and end_timestamp must be valid datetime strings in the format 'YYYY-MM-DD hh:mm'"}), 400
 
     timeframe_seconds = convert_timeframe_to_seconds(timeframe)
     if start_timestamp < 0 or end_timestamp < 0:
