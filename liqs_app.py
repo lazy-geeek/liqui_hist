@@ -268,9 +268,9 @@ def get_liquidations():
             results.append(
                 {
                     "symbol": result[0],
-                    "timeframe": result[1],
-                    "start_timestamp": result[2],
-                    "end_timestamp": result[3],
+                    "timeframe": timeframe,
+                    "start_timestamp": datetime.fromtimestamp(result[2] / 1000).isoformat(),
+                    "end_timestamp": datetime.fromtimestamp(result[3] / 1000).isoformat(),
                     "cumulated_usd_size": float(result[4]),
                 }
             )
