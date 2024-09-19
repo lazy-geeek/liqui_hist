@@ -135,8 +135,8 @@ async def binance_liquidation(uri):
                     # Add the data to the buffer
                     buffer.append(msg_values)
 
-                    # Emit the new liquidation data to all clients
-                    socketio.emit("new_liquidation", output)
+                # Emit the new liquidation data to all clients
+                socketio.emit("new_liquidation", output)
 
             except Exception as e:
                 await asyncio.sleep(5)
@@ -313,6 +313,7 @@ def periodic_write_to_db():
 
 
 if __name__ == "__main__":
+    buffer = []
     binance_thread = threading.Thread(target=run_binance_liquidation)
     db_write_thread = threading.Thread(target=periodic_write_to_db)
 
