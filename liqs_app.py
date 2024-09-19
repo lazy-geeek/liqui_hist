@@ -298,7 +298,8 @@ def write_buffer_to_db():
         for data in buffer:
             insert_data(global_cursor, data)
         global_conn.commit()
-        buffer = []
+        # buffer = [] # Remove this line to keep the buffer
+        # print(f"Buffer: {buffer}")
 
 
 def run_binance_liquidation():
