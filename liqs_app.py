@@ -88,7 +88,7 @@ async def binance_liquidation(uri):
                 order_data = json.loads(msg)["o"]
                 symbol = order_data["s"].replace("USDT", "")
                 side = order_data["S"]
-                timestamp = int(order_data["T"])
+                timestamp = int(order_data["T"]) // 1000  # Convert milliseconds to seconds
                 filled_quantity = float(order_data["z"])
                 price = float(order_data["p"])
                 usd_size = filled_quantity * price
