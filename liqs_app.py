@@ -167,8 +167,11 @@ def get_liquidations():
             data = request.get_json()
             symbol = data.get("symbol")
             timeframe = data.get("timeframe")
-            start_timestamp = int(data.get("start_timestamp"))
-            end_timestamp = int(data.get("end_timestamp"))
+            try:
+                start_timestamp = int(data.get("start_timestamp"))
+                end_timestamp = int(data.get("end_timestamp"))
+            except (TypeError, ValueError):
+                return jsonify({"error": "start_timestamp and end_timestamp must be valid integers"}), 400
         except Exception as e:
             return jsonify({"error": "Invalid JSON request body"}), 400
     else:
