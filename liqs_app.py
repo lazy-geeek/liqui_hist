@@ -245,18 +245,18 @@ def get_liquidations():
     while current_start < end_time:
         current_end = current_start + timedelta(seconds=timeframe_seconds)
         query = f"""
-        SELECT symbol, {timeframe_seconds} AS timeframe, {int(current_start.timestamp())} AS start_timestamp, {int(current_end.timestamp())} AS end_timestamp, SUM(usd_size) AS cumulated_usd_size
+        SELECT symbol, {timeframe_seconds} AS timeframe, {int(current_start.timestamp() * 1000)} AS start_timestamp, {int(current_end.timestamp() * 1000)} AS end_timestamp, SUM(usd_size) AS cumulated_usd_size
         FROM binance_liqs
         WHERE LOWER(symbol) = %s AND order_trade_time >= %s AND order_trade_time < %s
         GROUP BY symbol, timeframe, start_timestamp, end_timestamp
         """
 
         logger.debug(
-            f"Executing SQL: {query} with params: {symbol}, {int(current_start.timestamp())}, {int(current_end.timestamp())}"
+            f"Executing SQL: {query} with params: {symbol}, {int(current_start.timestamp() * 1000)}, {int(current_end.timestamp() * 1000)}"
         )
         cursor.execute(
             query,
-            (symbol, int(current_start.timestamp()), int(current_end.timestamp())),
+            (symbol, int(current_start.timestamp() * 1000), int(current_end.timestamp() * 1000)),
         )
         result = cursor.fetchone()
         if result:
