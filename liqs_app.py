@@ -35,6 +35,8 @@ table_name = "binance_liqs"
 global_conn = None
 global_cursor = None
 
+# Buffer to store liquidation data before writing to the database
+buffer = []
 
 # Create table if it doesn't exist
 def create_table_if_not_exists(cursor):
@@ -73,7 +75,7 @@ def insert_data(cursor, data):
 
 
 async def binance_liquidation(uri):
-    global global_conn, global_cursor
+    global global_conn, global_cursor, buffer
     if not global_conn or not global_cursor:
         global_conn, global_cursor = get_db_connection()
     async with connect(uri) as websocket:
@@ -132,8 +134,8 @@ async def binance_liquidation(uri):
                     ]
                     msg_values.append(usd_size)
 
-                    # Insert the data into the database
-                    insert_data(global_cursor, msg_values)
+                    # Append the data to the buffer
+                    buffer.append(msg_values)
 
                 # Emit the new liquidation data to all clients
                 socketio.emit("new_liquidation", output)
@@ -293,9 +295,10 @@ def convert_timeframe_to_seconds(timeframe: str) -> int:
 
 
 def write_buffer_to_db():
-    global buffer
+    global buffer, global_conn, global_cursor
     if buffer:
-        global_conn, global_cursor = get_db_connection()
+        if not global_conn or not global_cursor:
+            global_conn, global_cursor = get_db_connection()
         for data in buffer:
             insert_data(global_cursor, data)
         global_conn.commit()
@@ -313,14 +316,17 @@ def periodic_write_to_db():
 
 
 if __name__ == "__main__":
-    buffer = []
+    # Start the Binance liquidation thread
     binance_thread = threading.Thread(target=run_binance_liquidation)
-    db_write_thread = threading.Thread(target=periodic_write_to_db)
-
     binance_thread.start()
+
+    # Start the periodic database write thread
+    db_write_thread = threading.Thread(target=periodic_write_to_db)
     db_write_thread.start()
 
+    # Run the Flask app
     socketio.run(app, host="0.0.0.0", port=5000, debug=True)
 
+    # Join the threads to ensure they run until the app is stopped
     binance_thread.join()
     db_write_thread.join()
