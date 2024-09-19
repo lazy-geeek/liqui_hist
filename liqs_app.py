@@ -160,12 +160,19 @@ def index():
 def liquidations():
     return jsonify(output_data)
 
-@app.route("/api/liquidations")
+@app.route("/api/liquidations", methods=["GET", "POST"])
 def get_liquidations():
-    symbol = request.args.get("symbol")
-    timeframe = request.args.get("timeframe")
-    start_timestamp = int(request.args.get("start_timestamp"))
-    end_timestamp = int(request.args.get("end_timestamp"))
+    if request.method == "POST":
+        data = request.json
+        symbol = data.get("symbol")
+        timeframe = data.get("timeframe")
+        start_timestamp = int(data.get("start_timestamp"))
+        end_timestamp = int(data.get("end_timestamp"))
+    else:
+        symbol = request.args.get("symbol")
+        timeframe = request.args.get("timeframe")
+        start_timestamp = int(request.args.get("start_timestamp"))
+        end_timestamp = int(request.args.get("end_timestamp"))
 
     timeframe_seconds = convert_timeframe_to_seconds(timeframe)
     start_time = datetime.fromtimestamp(start_timestamp)
