@@ -200,6 +200,10 @@ def get_liquidations():
     except (ValueError, OverflowError):
         return jsonify({"error": "start_timestamp and end_timestamp are out of valid range"}), 400
 
+    # Ensure the start_time and end_time are within a reasonable range
+    if start_time > end_time:
+        return jsonify({"error": "start_timestamp must be before end_timestamp"}), 400
+
     conn = mysql.connector.connect(**db_config)
     cursor = conn.cursor()
 
@@ -231,6 +235,16 @@ def get_liquidations():
         current_start = current_end
 
     if not results:
+        return jsonify({"message": "No data found for the given parameters"}), 404
+
+    # Ensure the results are within the specified range
+    filtered_results = [
+        result
+        for result in results
+        if result["start_timestamp"] >= start_timestamp and result["end_timestamp"] <= end_timestamp
+    ]
+
+    if not filtered_results:
         return jsonify({"message": "No data found for the given parameters"}), 404
 
     cursor.close()
