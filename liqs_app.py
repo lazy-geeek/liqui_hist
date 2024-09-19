@@ -165,7 +165,7 @@ def get_liquidations():
     if request.method == "POST":
         try:
             data = request.get_json()
-            symbol = data.get("symbol")
+            symbol = data.get("symbol").lower()
             timeframe = data.get("timeframe")
             try:
                 start_timestamp = int(data.get("start_timestamp")) // 1000
@@ -175,7 +175,7 @@ def get_liquidations():
         except Exception as e:
             return jsonify({"error": "Invalid JSON request body"}), 400
     else:
-        symbol = request.args.get("symbol")
+        symbol = request.args.get("symbol").lower()
         timeframe = request.args.get("timeframe")
         start_timestamp = int(request.args.get("start_timestamp")) // 1000
         end_timestamp = int(request.args.get("end_timestamp")) // 1000
