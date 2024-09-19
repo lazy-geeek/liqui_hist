@@ -260,6 +260,7 @@ def get_liquidations():
         )
         result = cursor.fetchone()
         if result:
+            logger.debug(f"SQL Result: {result}")
             results.append(
                 {
                     "symbol": result[0],
