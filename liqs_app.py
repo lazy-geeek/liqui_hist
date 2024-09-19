@@ -60,7 +60,6 @@ def create_table_if_not_exists(cursor):
         usd_size DECIMAL(30, 8)
     )
     """
-    logger.debug(f"Executing SQL: {create_table_query}")
     cursor.execute(create_table_query)
 
 
@@ -75,7 +74,6 @@ def insert_data(cursor, data):
         %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s
     )
     """
-    logger.debug(f"Executing SQL: {insert_query} with data: {data}")
     cursor.execute(insert_query, data)
 
 
@@ -143,7 +141,7 @@ async def binance_liquidation(uri):
                     buffer.append(msg_values)
 
                     # Emit the new liquidation data to all clients
-                    socketio.emit('new_liquidation', output)
+                    socketio.emit("new_liquidation", output)
 
             except Exception as e:
                 await asyncio.sleep(5)
@@ -163,9 +161,11 @@ def get_db_connection():
 def index():
     return render_template("index.html")
 
+
 @app.route("/liquidations")
 def liquidations():
     return jsonify(output_data)
+
 
 @app.route("/api/liquidations", methods=["GET", "POST"])
 def get_liquidations():
@@ -182,7 +182,14 @@ def get_liquidations():
                 start_timestamp = int(start_datetime.timestamp())
                 end_timestamp = int(end_datetime.timestamp())
             except (TypeError, ValueError):
-                return jsonify({"error": "start_timestamp and end_timestamp must be valid datetime strings in the format 'YYYY-MM-DD hh:mm'"}), 400
+                return (
+                    jsonify(
+                        {
+                            "error": "start_timestamp and end_timestamp must be valid datetime strings in the format 'YYYY-MM-DD hh:mm'"
+                        }
+                    ),
+                    400,
+                )
         except Exception as e:
             return jsonify({"error": "Invalid JSON request body"}), 400
     else:
@@ -196,16 +203,35 @@ def get_liquidations():
             start_timestamp = int(start_datetime.timestamp())
             end_timestamp = int(end_datetime.timestamp())
         except (TypeError, ValueError):
-            return jsonify({"error": "start_timestamp and end_timestamp must be valid datetime strings in the format 'YYYY-MM-DD hh:mm'"}), 400
+            return (
+                jsonify(
+                    {
+                        "error": "start_timestamp and end_timestamp must be valid datetime strings in the format 'YYYY-MM-DD hh:mm'"
+                    }
+                ),
+                400,
+            )
 
     timeframe_seconds = convert_timeframe_to_seconds(timeframe)
     if start_timestamp < 0 or end_timestamp < 0:
-        return jsonify({"error": "start_timestamp and end_timestamp must be non-negative integers"}), 400
+        return (
+            jsonify(
+                {
+                    "error": "start_timestamp and end_timestamp must be non-negative integers"
+                }
+            ),
+            400,
+        )
     try:
         start_time = datetime.fromtimestamp(start_timestamp)
         end_time = datetime.fromtimestamp(end_timestamp)
     except (ValueError, OverflowError):
-        return jsonify({"error": "start_timestamp and end_timestamp are out of valid range"}), 400
+        return (
+            jsonify(
+                {"error": "start_timestamp and end_timestamp are out of valid range"}
+            ),
+            400,
+        )
 
     # Ensure the start_time and end_time are within a reasonable range
     if start_time > end_time:
@@ -224,8 +250,10 @@ def get_liquidations():
         WHERE LOWER(symbol) = %s AND order_trade_time >= %s AND order_trade_time < %s
         GROUP BY symbol, timeframe, start_timestamp, end_timestamp
         """
-        if query.strip().upper().startswith("SELECT"):
-            logger.debug(f"Executing SQL: {query} with params: {symbol}, {int(current_start.timestamp())}, {int(current_end.timestamp())}")
+
+        logger.debug(
+            f"Executing SQL: {query} with params: {symbol}, {int(current_start.timestamp())}, {int(current_end.timestamp())}"
+        )
         cursor.execute(
             query,
             (symbol, int(current_start.timestamp()), int(current_end.timestamp())),
@@ -250,7 +278,8 @@ def get_liquidations():
     filtered_results = [
         result
         for result in results
-        if result["start_timestamp"] >= start_timestamp and result["end_timestamp"] <= end_timestamp
+        if result["start_timestamp"] >= start_timestamp
+        and result["end_timestamp"] <= end_timestamp
     ]
 
     if not filtered_results:
@@ -260,6 +289,7 @@ def get_liquidations():
     conn.close()
 
     return jsonify(results)
+
 
 def convert_timeframe_to_seconds(timeframe: str) -> int:
     timeframe = timeframe.lower()
@@ -272,12 +302,14 @@ def convert_timeframe_to_seconds(timeframe: str) -> int:
     else:
         raise ValueError("Invalid timeframe format")
 
+
 def run_flask():
     debug_mode = os.getenv("FLASK_DEBUG", "0") == "1"
     socketio.run(app, host="0.0.0.0", port=5000, debug=debug_mode)
 
 
 buffer = []
+
 
 def write_buffer_to_db():
     global buffer
@@ -288,13 +320,16 @@ def write_buffer_to_db():
         global_conn.commit()
         buffer = []
 
+
 def run_binance_liquidation():
     asyncio.run(binance_liquidation("wss://fstream.binance.com/ws/!forceOrder@arr"))
+
 
 def periodic_write_to_db():
     while True:
         time.sleep(60)
         write_buffer_to_db()
+
 
 if __name__ == "__main__":
     flask_thread = threading.Thread(target=run_flask)
@@ -308,5 +343,3 @@ if __name__ == "__main__":
     flask_thread.join()
     binance_thread.join()
     db_write_thread.join()
-
-
