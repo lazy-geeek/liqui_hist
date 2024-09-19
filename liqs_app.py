@@ -75,7 +75,7 @@ def insert_data(cursor, data):
 
 
 async def binance_liquidation(uri):
-    global global_conn, global_cursor, buffer
+    global global_conn, global_cursor, buffer, output_data
     if not global_conn or not global_cursor:
         global_conn, global_cursor = get_db_connection()
     async with connect(uri) as websocket:
