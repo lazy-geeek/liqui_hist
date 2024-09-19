@@ -13,11 +13,6 @@ import pytz
 from websockets import connect
 from termcolor import cprint
 import mysql.connector
-import logging
-
-# Set up logging
-logging.basicConfig(level=logging.DEBUG)
-logger = logging.getLogger(__name__)
 
 app = Flask(__name__)
 socketio = SocketIO(app)
@@ -251,9 +246,6 @@ def get_liquidations():
         GROUP BY symbol, timeframe, start_timestamp, end_timestamp
         """
 
-        logger.debug(
-            f"Executing SQL: {query} with params: {symbol}, {int(current_start.timestamp() * 1000)}, {int(current_end.timestamp() * 1000)}"
-        )
         cursor.execute(
             query,
             (
@@ -264,7 +256,6 @@ def get_liquidations():
         )
         result = cursor.fetchone()
         if result:
-            logger.debug(f"SQL Result: {result}")
             results.append(
                 {
                     "symbol": result[0],
