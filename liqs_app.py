@@ -155,7 +155,9 @@ def index():
 
 @app.route("/liquidations")
 def liquidations():
-    return jsonify(output_data)
+    # You need to define what data you want to return here.
+    # For example, you could return the buffer or query the database.
+    return jsonify(buffer)
 
 
 @app.route("/api/liquidations", methods=["GET", "POST"])
