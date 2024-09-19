@@ -236,7 +236,8 @@ def convert_timeframe_to_seconds(timeframe: str) -> int:
         raise ValueError("Invalid timeframe format")
 
 def run_flask():
-    socketio.run(app, host="0.0.0.0", port=5000)
+    debug_mode = os.getenv("FLASK_DEBUG", "0") == "1"
+    socketio.run(app, host="0.0.0.0", port=5000, debug=debug_mode)
 
 
 buffer = []
