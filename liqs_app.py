@@ -132,8 +132,8 @@ async def binance_liquidation(uri):
                     ]
                     msg_values.append(usd_size)
 
-                    # Add the data to the buffer
-                    buffer.append(msg_values)
+                    # Insert the data into the database
+                    insert_data(global_cursor, msg_values)
 
                 # Emit the new liquidation data to all clients
                 socketio.emit("new_liquidation", output)
