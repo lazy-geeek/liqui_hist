@@ -17,9 +17,6 @@ import mysql.connector
 app = Flask(__name__)
 socketio = SocketIO(app)
 
-# Global variables to store the output
-output_data = []
-
 # MySQL database configuration from environment variables
 db_config = {
     "host": os.getenv("DB_HOST"),
@@ -75,7 +72,7 @@ def insert_data(cursor, data):
 
 
 async def binance_liquidation(uri):
-    global global_conn, global_cursor, buffer, output_data
+    global global_conn, global_cursor, buffer
     if not global_conn or not global_cursor:
         global_conn, global_cursor = get_db_connection()
     async with connect(uri) as websocket:
@@ -104,17 +101,17 @@ async def binance_liquidation(uri):
                         attrs.append("blink")
                         output = f"{stars}{output}"
                         for _ in range(4):
-                            output_data.append(output)
+                            socketio.emit("new_liquidation", output)
                     elif usd_size > 100000:
                         stars = "*" * 1
                         attrs.append("blink")
                         output = f"{stars}{output}"
                         for _ in range(2):
-                            output_data.append(output)
+                            socketio.emit("new_liquidation", output)
                     elif usd_size > 25000:
-                        output_data.append(output)
+                        socketio.emit("new_liquidation", output)
                     else:
-                        output_data.append(output)
+                        socketio.emit("new_liquidation", output)
 
                     msg_values = [
                         order_data.get(key)
@@ -136,9 +133,6 @@ async def binance_liquidation(uri):
 
                     # Append the data to the buffer
                     buffer.append(msg_values)
-
-                # Emit the new liquidation data to all clients
-                socketio.emit("new_liquidation", output)
 
             except Exception as e:
                 await asyncio.sleep(5)
