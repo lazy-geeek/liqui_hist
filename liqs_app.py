@@ -224,7 +224,8 @@ def get_liquidations():
         WHERE LOWER(symbol) = %s AND order_trade_time >= %s AND order_trade_time < %s
         GROUP BY symbol, timeframe, start_timestamp, end_timestamp
         """
-        logger.debug(f"Executing SQL: {query} with params: {symbol}, {int(current_start.timestamp())}, {int(current_end.timestamp())}")
+        if query.strip().upper().startswith("SELECT"):
+            logger.debug(f"Executing SQL: {query} with params: {symbol}, {int(current_start.timestamp())}, {int(current_end.timestamp())}")
         cursor.execute(
             query,
             (symbol, int(current_start.timestamp()), int(current_end.timestamp())),
