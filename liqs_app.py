@@ -283,7 +283,7 @@ def get_liquidations():
     filtered_results = [
         result
         for result in results
-        if result["start_timestamp"] >= start_timestamp * 1000
+        if int(result["start_timestamp"]) >= start_timestamp * 1000
         and result["end_timestamp"] <= end_timestamp * 1000
     ]
 
