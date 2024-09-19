@@ -292,14 +292,6 @@ def convert_timeframe_to_seconds(timeframe: str) -> int:
         raise ValueError("Invalid timeframe format")
 
 
-def run_flask():
-    debug_mode = os.getenv("FLASK_DEBUG", "0") == "1"
-    socketio.run(app, host="0.0.0.0", port=5000, debug=debug_mode)
-
-
-buffer = []
-
-
 def write_buffer_to_db():
     global buffer
     if buffer:
@@ -327,7 +319,7 @@ if __name__ == "__main__":
     binance_thread.start()
     db_write_thread.start()
 
-    run_flask()
+    socketio.run(app, host="0.0.0.0", port=5000, debug=True)
 
     binance_thread.join()
     db_write_thread.join()
