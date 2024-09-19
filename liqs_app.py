@@ -186,7 +186,7 @@ def get_liquidations():
     try:
         start_time = datetime.fromtimestamp(start_timestamp)
         end_time = datetime.fromtimestamp(end_timestamp)
-    except ValueError:
+    except (ValueError, OverflowError):
         return jsonify({"error": "start_timestamp and end_timestamp are out of valid range"}), 400
 
     conn = mysql.connector.connect(**db_config)
@@ -218,6 +218,9 @@ def get_liquidations():
                 }
             )
         current_start = current_end
+
+    if not results:
+        return jsonify({"message": "No data found for the given parameters"}), 404
 
     cursor.close()
     conn.close()
