@@ -256,7 +256,11 @@ def get_liquidations():
         )
         cursor.execute(
             query,
-            (symbol, int(current_start.timestamp() * 1000), int(current_end.timestamp() * 1000)),
+            (
+                symbol,
+                int(current_start.timestamp() * 1000),
+                int(current_end.timestamp() * 1000),
+            ),
         )
         result = cursor.fetchone()
         if result:
@@ -284,7 +288,7 @@ def get_liquidations():
     ]
 
     if not filtered_results:
-        return jsonify({"message": "No data found for the given parameters"}), 404
+        return jsonify({"message": "No filtered results"}), 404
 
     cursor.close()
     conn.close()
