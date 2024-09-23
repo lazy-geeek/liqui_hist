@@ -12,7 +12,7 @@ from websockets import connect
 import mysql.connector
 
 app = Flask(__name__)
-socketio = SocketIO(app)
+socketio = SocketIO(app, async_mode="eventlet")
 
 # Global variables to store the output
 output_data = []
