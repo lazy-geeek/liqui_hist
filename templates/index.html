@@ -10,7 +10,19 @@
 <body>
     <div class="container mt-5">
         <h1 class="text-center mb-4">Binance Liquidation Tracker</h1>
-        <div id="liquidation-log" class="border p-3 rounded"></div>
+        <table id="liquidation-table" class="table table-bordered table-striped">
+            <thead>
+                <tr>
+                    <th>Symbol</th>
+                    <th>Side</th>
+                    <th>Timestamp</th>
+                    <th>USD Size</th>
+                </tr>
+            </thead>
+            <tbody>
+                <!-- Liquidation entries will be added here -->
+            </tbody>
+        </table>
     </div>
     <!-- Bootstrap JS and dependencies -->
     <script src="https://code.jquery.com/jquery-3.5.1.slim.min.js"></script>
@@ -18,13 +30,23 @@
     <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/js/bootstrap.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/socket.io/4.0.1/socket.io.js"></script>
     <script>
-        const logElement = document.getElementById("liquidation-log");
+        const tableBody = document.querySelector("#liquidation-table tbody");
 
-        // Function to add a new liquidation entry to the log
+        // Function to add a new liquidation entry to the table
         function addLiquidationEntry(data) {
-            const entry = document.createElement("div");
-            entry.textContent = data;
-            logElement.appendChild(entry);
+            const row = document.createElement("tr");
+            const columns = data.split(" ");
+            const symbol = columns[1];
+            const side = columns[0].slice(0, 1);
+            const timestamp = columns[2];
+            const usdSize = parseFloat(columns[3].replace(/,/g, ''));
+            row.innerHTML = `
+                <td>${symbol}</td>
+                <td>${side}</td>
+                <td>${timestamp}</td>
+                <td>${usdSize.toLocaleString()}</td>
+            `;
+            tableBody.appendChild(row);
         }
 
         // Establish WebSocket connection

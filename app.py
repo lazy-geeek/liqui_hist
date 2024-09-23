@@ -154,11 +154,6 @@ def index():
     return render_template("index.html")
 
 
-@app.route("/liquidations")
-def liquidations():
-    return jsonify(output_data)
-
-
 buffer = []
 
 
