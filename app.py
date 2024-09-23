@@ -1,17 +1,14 @@
 from flask import Flask, render_template, jsonify, request
 from flask_socketio import SocketIO, emit
 import mysql.connector
-import os
-from datetime import datetime, timedelta
+from datetime import datetime
 import asyncio
 import threading
 import time
 import json
 import os
-from datetime import datetime
 import pytz
 from websockets import connect
-from termcolor import cprint
 import mysql.connector
 
 app = Flask(__name__)
@@ -29,7 +26,7 @@ db_config = {
 }
 
 # Table name
-table_name = "binance_liqs"
+table_name = os.getenv("DB_LIQ_TABLENAME")
 
 # Global connection object
 global_conn = None
@@ -162,141 +159,6 @@ def liquidations():
     return jsonify(output_data)
 
 
-@app.route("/api/liquidations", methods=["GET", "POST"])
-def get_liquidations():
-    if request.method == "POST":
-        try:
-            data = request.get_json()
-            symbol = data.get("symbol").lower()
-            timeframe = data.get("timeframe")
-            try:
-                start_datetime_str = data.get("start_timestamp")
-                end_datetime_str = data.get("end_timestamp")
-                start_datetime = datetime.strptime(start_datetime_str, "%Y-%m-%d %H:%M")
-                end_datetime = datetime.strptime(end_datetime_str, "%Y-%m-%d %H:%M")
-                start_timestamp = int(start_datetime.timestamp())
-                end_timestamp = int(end_datetime.timestamp())
-            except (TypeError, ValueError):
-                return (
-                    jsonify(
-                        {
-                            "error": "start_timestamp and end_timestamp must be valid datetime strings in the format 'YYYY-MM-DD hh:mm'"
-                        }
-                    ),
-                    400,
-                )
-        except Exception as e:
-            return jsonify({"error": "Invalid JSON request body"}), 400
-    else:
-        symbol = request.args.get("symbol").lower()
-        timeframe = request.args.get("timeframe")
-        try:
-            start_datetime_str = request.args.get("start_timestamp")
-            end_datetime_str = request.args.get("end_timestamp")
-            start_datetime = datetime.strptime(start_datetime_str, "%Y-%m-%d %H:%M")
-            end_datetime = datetime.strptime(end_datetime_str, "%Y-%m-%d %H:%M")
-            start_timestamp = int(start_datetime.timestamp())
-            end_timestamp = int(end_datetime.timestamp())
-        except (TypeError, ValueError):
-            return (
-                jsonify(
-                    {
-                        "error": "start_timestamp and end_timestamp must be valid datetime strings in the format 'YYYY-MM-DD hh:mm'"
-                    }
-                ),
-                400,
-            )
-
-    timeframe_seconds = convert_timeframe_to_seconds(timeframe)
-    if start_timestamp < 0 or end_timestamp < 0:
-        return (
-            jsonify(
-                {
-                    "error": "start_timestamp and end_timestamp must be non-negative integers"
-                }
-            ),
-            400,
-        )
-    try:
-        start_time = datetime.fromtimestamp(start_timestamp)
-        end_time = datetime.fromtimestamp(end_timestamp)
-    except (ValueError, OverflowError):
-        return (
-            jsonify(
-                {"error": "start_timestamp and end_timestamp are out of valid range"}
-            ),
-            400,
-        )
-
-    # Ensure the start_time and end_time are within a reasonable range
-    if start_time > end_time:
-        return jsonify({"error": "start_timestamp must be before end_timestamp"}), 400
-
-    conn = mysql.connector.connect(**db_config)
-    cursor = conn.cursor()
-
-    results = []
-    current_start = start_time
-    while current_start < end_time:
-        current_end = current_start + timedelta(seconds=timeframe_seconds)
-        query = f"""
-        SELECT symbol, {timeframe_seconds} AS timeframe, {int(current_start.timestamp() * 1000)} AS start_timestamp, {int(current_end.timestamp() * 1000)} AS end_timestamp, SUM(usd_size) AS cumulated_usd_size
-        FROM binance_liqs
-        WHERE LOWER(symbol) = %s AND order_trade_time >= %s AND order_trade_time < %s
-        GROUP BY symbol, timeframe, start_timestamp, end_timestamp
-        """
-
-        cursor.execute(
-            query,
-            (
-                symbol,
-                int(current_start.timestamp() * 1000),
-                int(current_end.timestamp() * 1000),
-            ),
-        )
-        result = cursor.fetchone()
-        if result:
-            results.append(
-                {
-                    "symbol": result[0],
-                    "timeframe": timeframe,
-                    "start_timestamp": datetime.fromtimestamp(
-                        result[2] / 1000
-                    ).isoformat(),
-                    "end_timestamp": datetime.fromtimestamp(
-                        result[3] / 1000
-                    ).isoformat(),
-                    "cumulated_usd_size": float(result[4]),
-                }
-            )
-        current_start = current_end
-
-    if not results:
-        return jsonify({"message": "No data found for the given parameters"}), 404
-
-    cursor.close()
-    conn.close()
-
-    return jsonify(results)
-
-
-def convert_timeframe_to_seconds(timeframe: str) -> int:
-    timeframe = timeframe.lower()
-    if timeframe.endswith("m"):
-        return int(timeframe[:-1]) * 60
-    elif timeframe.endswith("h"):
-        return int(timeframe[:-1]) * 3600
-    elif timeframe.endswith("d"):
-        return int(timeframe[:-1]) * 86400
-    else:
-        raise ValueError("Invalid timeframe format")
-
-
-def run_flask():
-    debug_mode = os.getenv("FLASK_DEBUG", "0") == "1"
-    socketio.run(app, host="0.0.0.0", port=5000, debug=debug_mode)
-
-
 buffer = []
 
 
@@ -320,15 +182,20 @@ def periodic_write_to_db():
         write_buffer_to_db()
 
 
-if __name__ == "__main__":
+def create_app():
+    return app
+
+
+def init_app():
     binance_thread = threading.Thread(target=run_binance_liquidation)
     db_write_thread = threading.Thread(target=periodic_write_to_db)
 
     binance_thread.start()
     db_write_thread.start()
 
-    # Run the Flask app in the main thread
-    run_flask()
+    return app
 
-    binance_thread.join()
-    db_write_thread.join()
+
+if __name__ == "__main__":
+    init_app()
+    socketio.run(app, host="0.0.0.0", port=5000, debug=True)
