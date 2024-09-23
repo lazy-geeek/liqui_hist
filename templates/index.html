@@ -36,8 +36,8 @@
         function addLiquidationEntry(data) {
             const row = document.createElement("tr");
             const columns = data.split(" ");
-            const symbol = columns[1];
-            const side = columns[0].slice(0, 1);
+            const symbol = columns[0];
+            const side = columns[1];
             const timestamp = columns[2];
             const usdSize = parseFloat(columns[3].replace(/,/g, ''));
             row.innerHTML = `

@@ -78,7 +78,7 @@ async def binance_liquidation(uri):
             try:
                 msg = await websocket.recv()
                 order_data = json.loads(msg)["o"]
-                symbol = order_data["s"].replace("USDT", "")
+                symbol = order_data["s"]
                 side = order_data["S"]
                 timestamp = int(order_data["T"])
                 filled_quantity = float(order_data["z"])
@@ -88,28 +88,9 @@ async def binance_liquidation(uri):
                     timestamp / 1000, pytz.timezone("Europe/Berlin")
                 ).strftime("%H:%M:%S")
                 if usd_size > 0:
-                    liquidation_type = "L LIQ" if side == "SELL" else "S LIQ"
-                    symbol = symbol[:4]
-                    output = f"{liquidation_type} {symbol} {time_est} {usd_size:,.0f}"
-                    color = "green" if side == "SELL" else "red"
-                    attrs = ["bold"] if usd_size > 10000 else []
+                    output = f"{symbol} {side} {time_est} {usd_size:,.0f}"
 
-                    if usd_size > 250000:
-                        stars = "*" * 3
-                        attrs.append("blink")
-                        output = f"{stars}{output}"
-                        for _ in range(4):
-                            output_data.append(output)
-                    elif usd_size > 100000:
-                        stars = "*" * 1
-                        attrs.append("blink")
-                        output = f"{stars}{output}"
-                        for _ in range(2):
-                            output_data.append(output)
-                    elif usd_size > 25000:
-                        output_data.append(output)
-                    else:
-                        output_data.append(output)
+                    output_data.append(output)
 
                     msg_values = [
                         order_data.get(key)
