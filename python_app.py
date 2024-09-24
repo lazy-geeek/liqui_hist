@@ -101,7 +101,7 @@ def on_message(ws, message):
             "z",
             "T",
         ]
-    ] + [usd_size] + [datetime.datetime.now(datetime.UTC).isoformat()]
+    ] + [usd_size] + [datetime.datetime.now(datetime.UTC).strftime('%Y-%m-%d %H:%M:%S')]
 
     # Insert data immediately
     global_conn, global_cursor = get_db_connection()
