@@ -15,6 +15,7 @@ flask = "^3.0.3"
 flask-socketio = "^5.3.7"
 gunicorn = "^23.0.0"
 eventlet = "^0.37.0"
+websocket-client = "^1.8.0"
 
 [data.dependencies.package-mode]
 package-mode = false
