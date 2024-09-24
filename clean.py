@@ -5,6 +5,7 @@ import mysql.connector
 import os
 import datetime
 import time
+import asyncio
 
 socket = "wss://fstream.binance.com/ws/!forceOrder@arr"
 
@@ -74,8 +75,14 @@ def get_db_connection():
     return global_conn, global_cursor
 
 
+async def insert_data_async(data_buffer):
+    global_conn, global_cursor = get_db_connection()
+    for entry in data_buffer:
+        insert_data(global_cursor, entry)
+    global_conn.commit()
+
 def on_message(ws, message):
-    global data_buffer, last_insert_time
+    global data_buffer
     data = json.loads(message)
     order_data = data["o"]
     timestamp = int(order_data["T"])
@@ -107,30 +114,34 @@ def on_message(ws, message):
         + [usd_size]
     )
 
-    # Check if a minute has passed
-    if time.time() - last_insert_time >= 60:
-        global_conn, global_cursor = get_db_connection()
-        for entry in data_buffer:
-            insert_data(global_cursor, entry)
-        global_conn.commit()
-        data_buffer = []
-        last_insert_time = time.time()
-
 
 def on_error(ws, error):
     print("Error:", error)
 
 
-def on_close(ws):
-    print("Connection closed")
+def on_close(ws, close_status_code, close_msg):
+    print(f"Connection closed with status code: {close_status_code}, message: {close_msg}")
 
 
 def on_open(ws):
     print("Connection opened")
 
 
-ws = websocket.WebSocketApp(
-    socket, on_message=on_message, on_error=on_error, on_close=on_close
-)
-ws.on_open = on_open
-ws.run_forever()
+async def periodic_insert():
+    global data_buffer, last_insert_time
+    while True:
+        await asyncio.sleep(1)
+        if time.time() - last_insert_time >= 60 and data_buffer:
+            await insert_data_async(data_buffer)
+            data_buffer = []
+            last_insert_time = time.time()
+
+async def main():
+    ws = websocket.WebSocketApp(
+        socket, on_message=on_message, on_error=on_error, on_close=on_close
+    )
+    ws.on_open = on_open
+    asyncio.create_task(periodic_insert())
+    await asyncio.to_thread(ws.run_forever)
+
+asyncio.run(main())
