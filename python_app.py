@@ -65,9 +65,13 @@ def get_db_connection():
     if not global_conn or not global_cursor:
         global_conn = mysql.connector.connect(**db_config)
         global_cursor = global_conn.cursor()
-        create_table_if_not_exists(global_cursor)
-        global_conn.commit()
     return global_conn, global_cursor
+
+def init_app():
+    global global_conn, global_cursor
+    global_conn, global_cursor = get_db_connection()
+    create_table_if_not_exists(global_cursor)
+    global_conn.commit()
 
 
 def on_message(ws, message):
@@ -116,6 +120,8 @@ def on_close(ws):
 def on_open(ws):
     print("Connection opened")
 
+
+init_app()
 
 ws = websocket.WebSocketApp(
     socket, on_message=on_message, on_error=on_error, on_close=on_close
