@@ -1,1 +1,2 @@
-web: gunicorn wsgi:app --worker-class eventlet -w 1 --timeout 120
+web: python flask_static.py
+worker: python python_app.py
