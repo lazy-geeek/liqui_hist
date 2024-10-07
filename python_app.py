@@ -113,8 +113,15 @@ def on_error(ws, error):
     print("Error:", error)
 
 
-def on_close(ws):
-    print("Connection closed")
+def on_close(ws, close_status_code, close_msg):
+    print(f"Connection closed with status code: {close_status_code}, message: {close_msg}")
+    # Reinitialize the WebSocket connection
+    init_app()
+    ws = websocket.WebSocketApp(
+        socket, on_message=on_message, on_error=on_error, on_close=on_close
+    )
+    ws.on_open = on_open
+    ws.run_forever()
 
 
 def on_open(ws):
