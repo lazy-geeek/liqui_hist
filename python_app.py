@@ -17,16 +17,8 @@ cosmos_key = os.getenv("COSMOS_KEY")
 if not cosmos_endpoint or not cosmos_key:
     raise ValueError("Missing Cosmos DB configuration - check environment variables")
 
-print(f"Raw COSMOS_ENDPOINT from env: {cosmos_endpoint}")  # Debug output
-
-# Fix URL encoding if needed
-# First decode backslash-escaped sequences (like \x3a)
 cosmos_endpoint = codecs.decode(cosmos_endpoint, "unicode-escape")
-
-# Then unquote standard URL-encoded characters
 cosmos_endpoint = unquote(cosmos_endpoint)
-
-print(f"Final Cosmos URL: {cosmos_endpoint}")  # Debug output
 
 try:
     cosmos_client = CosmosClient(url=cosmos_endpoint, credential=cosmos_key)
