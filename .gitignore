@@ -164,3 +164,4 @@ cython_debug/
 binance_liqs.csv
 .roo/
 
+.rooignore
